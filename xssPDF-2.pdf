@@ -2,5 +2,6 @@
         1 0 obj
         <</Pages 1 0 R /OpenAction 2 0 R>>
         2 0 obj
-        <</S /JavaScript /JS (app.alert(document.cookie))
-        )>> trailer <</Root 1 0 R>>
+        <</S /JavaScript /JS (app.alert(document.cookie))>> 
+        trailer
+        <</Root 1 0 R>>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>XSS Test</title>
+        <script type="text/javascript">
+            function showAlerts() {
+                alert(1);
+                alert(document.cookie);
+            }
+        </script>
+    </head>
+    <body onload="showAlerts()">
+        <h1>XSS Test</h1>
+        <p>This page runs two alerts: one with the number 1 and another with the document's cookies.</p>
+    </body>
+    </html>

